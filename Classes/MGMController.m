@@ -43,7 +43,8 @@ NSString * const MGMChromiumZip = @"chrome-mac.zip";
 NSString * const MGMTMPPath = @"/tmp";
 
 NSString * const MGMChannelsURL = @"http://omahaproxy.appspot.com/all.json?os=mac";
-static NSString *MGMSnapshotURL = @"http://build.chromium.org/f/chromium/snapshots/Mac/";
+static NSString *MGMSnapshotURL = @"https://commondatastorage.googleapis.com/chromium-browser-snapshots/";
+NSString * const MGMSnapshotPrefix = @"Mac/";
 NSString * const MGMSVNLogsURL = @"http://build.chromium.org/f/chromium/perf/dashboard/ui/changelog.html?url=/trunk/src&range=%@:%@&mode=html&os=mac";
 
 NSString * const MGMCChannel = @"channel";
@@ -56,6 +57,27 @@ NSString * const MGMCCanary = @"canary";
 NSString * const MGMUBUpdate = @"Update";
 NSString * const MGMUBInstall = @"Install";
 NSString * const MGMUBCancel = @"Cancel";
+
+@interface NSString (MGMAddonsSort)
+- (NSComparisonResult)numberCompare:(id)theItem;
+@end
+
+
+@implementation NSString (MGMAddonsSort)
+- (NSComparisonResult)numberCompare:(id)theItem {
+	unsigned int theNumber = 0;
+	unsigned int number = 0;
+	if ([theItem isKindOfClass:[NSString class]])
+		sscanf([theItem UTF8String], "%u", &theNumber);
+	sscanf([self UTF8String], "%u", &number);
+	if (number<theNumber)
+		return NSOrderedAscending;
+	else if (number>theNumber)
+		return NSOrderedDescending;
+	return NSOrderedSame;
+}
+@end
+
 
 @interface NSOpenPanel (MGMIgnore)
 - (void)setDirectoryURL:(NSURL *)url;
@@ -131,7 +153,9 @@ NSString * const MGMUBCancel = @"Cancel";
 	[handler setFailWithError:@selector(channels:didFailWithError:)];
 	[handler setFinish:@selector(channelsFinished:)];
 	[connectionManager addHandler:handler];
-	handler = [MGMURLBasicHandler handlerWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:MGMSnapshotURL]] delegate:self]; 
+	revisionsArray = [NSMutableArray new];
+	NSString *url = [MGMSnapshotURL stringByAppendingFormat:@"?delimiter=/&prefix=%@", MGMSnapshotPrefix];
+	handler = [MGMURLBasicHandler handlerWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:url]] delegate:self];
 	[handler setFailWithError:@selector(revisions:didFailWithError:)];
 	[handler setFinish:@selector(revisionsFinished:)];
 	[connectionManager addHandler:handler];
@@ -192,41 +216,85 @@ NSString * const MGMUBCancel = @"Cancel";
 	[alert setMessageText:@"Error loading revisions"];
 	[alert setInformativeText:[theError localizedDescription]];
 	[alert runModal];
-}
-- (void)revisionsFinished:(MGMURLBasicHandler *)theHandler {
-	NSString *returnedString = [theHandler string];
-	[buildPopUp removeAllItems];
-	[progress setDoubleValue:0.50];
-	
 	NSMenu *items = [NSMenu new];
-	unsigned long length = [returnedString length];
-	NSRange range = NSMakeRange(0, length);
-	while (range.location!=length) {
-		NSRange urlRange = [returnedString rangeOfString:@"/\">" options:0 range:range];
-		if (urlRange.location==NSNotFound)
-			break;
-		range.location = urlRange.location+urlRange.length;
-		range.length = length-range.location;
-		
-		urlRange = [returnedString rangeOfString:@"</a>" options:0 range:range];
-		if (urlRange.location==NSNotFound)
-			continue;
-		NSRange revisionRange = NSMakeRange(range.location, urlRange.location-range.location);
-		range.location = urlRange.location+urlRange.length;
-		range.length = length-range.location;
-		urlRange = [returnedString rangeOfString:@"/" options:0 range:revisionRange];
-		if (urlRange.location==NSNotFound)
-			continue;
-		revisionRange.length -= 1;
-		
+	[revisionsArray sortUsingSelector:@selector(numberCompare:)];
+	for (unsigned int i=0; i<[revisionsArray count]; i++) {
 		NSMenuItem *item = [NSMenuItem new];
-		[item setTitle:[returnedString substringWithRange:revisionRange]];
+		[item setTitle:[revisionsArray objectAtIndex:i]];
 		[items addItem:item];
 		[item release];
 	}
+	[buildPopUp removeAllItems];
 	[buildPopUp setMenu:items];
 	[items release];
+	[revisionsArray release];
+	revisionsArray = nil;
 	[self channelSelect:self];
+}
+- (void)revisionsFinished:(MGMURLBasicHandler *)theHandler {
+	NSError *error = nil;
+	NSXMLDocument *xml = [[NSXMLDocument alloc] initWithData:[theHandler data] options:NSXMLDocumentTidyXML error:&error];
+	[progress setDoubleValue:0.50];
+	
+	if (error!=nil) {
+		NSLog(@"%@", error);
+		NSAlert *alert = [[NSAlert new] autorelease];
+		[alert setMessageText:@"Error parsing revisions"];
+		[alert setInformativeText:[error localizedDescription]];
+		[alert runModal];
+		NSMenu *items = [NSMenu new];
+		[revisionsArray sortUsingSelector:@selector(numberCompare:)];
+		for (unsigned int i=0; i<[revisionsArray count]; i++) {
+			NSMenuItem *item = [NSMenuItem new];
+			[item setTitle:[revisionsArray objectAtIndex:i]];
+			[items addItem:item];
+			[item release];
+		}
+		[buildPopUp removeAllItems];
+		[buildPopUp setMenu:items];
+		[items release];
+		[revisionsArray release];
+		revisionsArray = nil;
+		[self channelSelect:self];
+	} else {
+		NSXMLElement *rootElement = [xml rootElement];
+		NSArray *isTruncated = [rootElement elementsForName:@"IsTruncated"];
+		NSArray *commonPrefixes = [rootElement elementsForName:@"CommonPrefixes"];
+		for (int i=0; i<[commonPrefixes count]; i++) {
+			NSArray *prefix = [[commonPrefixes objectAtIndex:i] elementsForName:@"Prefix"];
+			if ([prefix count]<1)
+				continue;
+			NSArray *parsed = [[[prefix objectAtIndex:0] stringValue] componentsSeparatedByString:@"/"];
+			if ([parsed count]<2)
+				continue;
+			[revisionsArray addObject:[parsed objectAtIndex:1]];
+		}
+		NSArray *nextMarkers = [rootElement elementsForName:@"NextMarker"];
+		if ([isTruncated count]>0 && [[[isTruncated objectAtIndex:0] stringValue] isEqual:@"true"] && [nextMarkers count]>0) {
+			NSString *nextMarker = [[nextMarkers objectAtIndex:0] stringValue];
+			NSString *url = [MGMSnapshotURL stringByAppendingFormat:@"?delimiter=/&prefix=%@&marker=%@", MGMSnapshotPrefix, nextMarker];
+			MGMURLBasicHandler *handler = [MGMURLBasicHandler handlerWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:url]] delegate:self];
+			[handler setFailWithError:@selector(revisions:didFailWithError:)];
+			[handler setFinish:@selector(revisionsFinished:)];
+			[connectionManager addHandler:handler];
+		} else {
+			NSMenu *items = [NSMenu new];
+			[revisionsArray sortUsingSelector:@selector(numberCompare:)];
+			for (unsigned int i=0; i<[revisionsArray count]; i++) {
+				NSMenuItem *item = [NSMenuItem new];
+				[item setTitle:[revisionsArray objectAtIndex:i]];
+				[items addItem:item];
+				[item release];
+			}
+			[buildPopUp removeAllItems];
+			[buildPopUp setMenu:items];
+			[items release];
+			[revisionsArray release];
+			revisionsArray = nil;
+			[self channelSelect:self];
+		}
+	}
+	[xml release];
 }
 
 - (IBAction)channelSelect:(id)sender {
@@ -247,7 +315,7 @@ NSString * const MGMUBCancel = @"Cancel";
 	if (itemIndex==NSNotFound) {
 		[buildWarningField setHidden:NO];
 		for (unsigned int i=0; i<[revisions count]; i++) {
-			if ([(NSString *)[revisions objectAtIndex:i] compare:revision]==NSOrderedDescending) {
+			if ([(NSString *)[revisions objectAtIndex:i] numberCompare:revision]==NSOrderedDescending) {
 				itemIndex = i;
 				break;
 			}
@@ -263,7 +331,7 @@ NSString * const MGMUBCancel = @"Cancel";
 	[self buildSelect:self];
 }
 - (IBAction)buildSelect:(id)sender {
-	NSURL *buildURL = [[[NSURL URLWithString:MGMSnapshotURL] appendPathComponent:[buildPopUp titleOfSelectedItem]] appendPathComponent:@"REVISIONS"];
+	NSURL *buildURL = [[[[NSURL URLWithString:MGMSnapshotURL] appendPathComponent:MGMSnapshotPrefix] appendPathComponent:[buildPopUp titleOfSelectedItem]] appendPathComponent:@"REVISIONS"];
 	MGMURLBasicHandler *handler = [MGMURLBasicHandler handlerWithRequest:[NSURLRequest requestWithURL:buildURL] delegate:self];
 	[handler setFailWithError:@selector(revision:didFailWithError:)];
 	[handler setReceiveResponse:@selector(revision:didReceiveResponse:)];
@@ -397,7 +465,7 @@ NSString * const MGMUBCancel = @"Cancel";
 	NSString *revision1, *revision2, *tmp;
 	revision1 = [yourBuildField stringValue];
 	revision2 = [buildPopUp titleOfSelectedItem];
-	if ([revision1 compare:revision2]==NSOrderedDescending) {
+	if ([revision1 numberCompare:revision2]==NSOrderedDescending) {
 		tmp = revision1;
 		revision1 = revision2;
 		revision2 = tmp;
@@ -418,7 +486,7 @@ NSString * const MGMUBCancel = @"Cancel";
 		[progress startAnimation:self];
 		startTime = [[NSDate date] timeIntervalSince1970];
 		
-		NSURL *url = [[[NSURL URLWithString:MGMSnapshotURL] appendPathComponent:[buildPopUp titleOfSelectedItem]] appendPathComponent:MGMChromiumZip];
+		NSURL *url = [[[[NSURL URLWithString:MGMSnapshotURL] appendPathComponent:MGMSnapshotPrefix] appendPathComponent:[buildPopUp titleOfSelectedItem]] appendPathComponent:MGMChromiumZip];
 		[updateHandler release];
 		updateHandler = [[MGMURLBasicHandler handlerWithRequest:[NSURLRequest requestWithURL:url] delegate:self] retain];
 		[updateHandler setFile:[MGMTMPPath stringByAppendingPathComponent:MGMChromiumZip]];

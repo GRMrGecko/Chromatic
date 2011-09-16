@@ -43,6 +43,8 @@ extern NSString * const MGMQuitAfterLaunch;
 	NSMutableDictionary *channelRevisions;
 	NSString *chromiumPath;
 	
+	NSMutableArray *revisionsArray;
+	
 	IBOutlet NSPopUpButton *channelPopUp;
 	IBOutlet NSTextField *buildWarningField;
 	IBOutlet NSPopUpButton *buildPopUp;
