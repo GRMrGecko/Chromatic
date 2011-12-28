@@ -203,7 +203,8 @@ NSString * const MGMUBCancel = @"Cancel";
 	}
 	for (int i=0; i<[versions count]; i++) {
 		NSDictionary *versionInfo = [versions objectAtIndex:i];
-		[channelRevisions setObject:[[versionInfo objectForKey:MGMCRevision] stringValue] forKey:[versionInfo objectForKey:MGMCChannel]];
+        id channel = [versionInfo objectForKey:MGMCRevision];
+		[channelRevisions setObject:([channel isKindOfClass:[NSString class]] ? channel : [channel stringValue]) forKey:[versionInfo objectForKey:MGMCChannel]];
 	}
 	
 	[progress setIndeterminate:NO];
