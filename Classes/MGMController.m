@@ -38,7 +38,6 @@ NSString * const MGMQuitAfterLaunch = @"MGMQuitAfterLaunch";
 NSString * const MGMCPApplications = @"/Applications";
 NSString * const MGMCPUserApplications = @"~/Applications";
 NSString * const MGMCPChromium = @"Chromium.app";
-NSString * const MGMCPRevision = @"SVNRevision";
 NSString * const MGMChromiumZip = @"chrome-mac.zip";
 NSString * const MGMTMPPath = @"/tmp";
 
@@ -432,7 +431,12 @@ NSString * const MGMUBCancel = @"Cancel";
 	NSFileManager *manager = [NSFileManager defaultManager];
 	if ([manager fileExistsAtPath:chromiumPath]) {
 		NSDictionary *chromiumInfo = (NSDictionary *)CFBundleCopyInfoDictionaryInDirectory((CFURLRef)[NSURL fileURLWithPath:chromiumPath]);
-		[yourBuildField setStringValue:[chromiumInfo objectForKey:MGMCPRevision]];
+		NSString *build = [chromiumInfo objectForKey:@"SVNRevision"];
+		if (build==nil)
+			build = [chromiumInfo objectForKey:@"SCMRevision"];
+		if (build!=nil)
+			[yourBuildField setStringValue:build];
+			
 		[chromiumInfo release];
 		
 		NSDictionary *chromeAttributes = [manager attributesOfItemAtPath:chromiumPath];
