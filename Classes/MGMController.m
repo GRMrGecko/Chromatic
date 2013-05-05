@@ -42,8 +42,8 @@ NSString * const MGMChromiumZip = @"chrome-mac.zip";
 NSString * const MGMTMPPath = @"/tmp";
 
 NSString * const MGMChannelsURL = @"http://omahaproxy.appspot.com/all.json?os=mac";
-static NSString *MGMSnapshotURL = @"https://commondatastorage.googleapis.com/chromium-browser-snapshots/";
-NSString * const MGMSnapshotPrefix = @"Mac/";
+static NSString *MGMSnapshotURL = @"http://commondatastorage.googleapis.com/chromium-qa/";
+NSString * const MGMSnapshotPrefix = @"Chromium_Mac_10_8_x64__experimental_/";
 NSString * const MGMSVNLogsURL = @"http://build.chromium.org/f/chromium/perf/dashboard/ui/changelog.html?url=/trunk/src&range=%@:%@&mode=html&os=mac";
 
 NSString * const MGMCChannel = @"channel";
