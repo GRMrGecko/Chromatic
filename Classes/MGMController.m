@@ -157,6 +157,7 @@ NSString * const MGMUBCancel = @"Cancel";
 	handler = [MGMURLBasicHandler handlerWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:url]] delegate:self];
 	[handler setFailWithError:@selector(revisions:didFailWithError:)];
 	[handler setFinish:@selector(revisionsFinished:)];
+	[statusField setStringValue:@"Loading Revisions"];
 	[connectionManager addHandler:handler];
 }
 
@@ -267,6 +268,8 @@ NSString * const MGMUBCancel = @"Cancel";
 			NSArray *parsed = [[[prefix objectAtIndex:0] stringValue] componentsSeparatedByString:@"/"];
 			if ([parsed count]<2)
 				continue;
+			if ([[parsed objectAtIndex:1] length]>=40)
+				continue;
 			[revisionsArray addObject:[parsed objectAtIndex:1]];
 		}
 		NSArray *nextMarkers = [rootElement elementsForName:@"NextMarker"];
@@ -291,6 +294,7 @@ NSString * const MGMUBCancel = @"Cancel";
 			[items release];
 			[revisionsArray release];
 			revisionsArray = nil;
+			[statusField setStringValue:@""];
 			[self channelSelect:self];
 		}
 	}
