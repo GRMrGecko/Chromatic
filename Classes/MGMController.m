@@ -41,13 +41,13 @@ NSString * const MGMCPChromium = @"Chromium.app";
 NSString * const MGMChromiumZip = @"chrome-mac.zip";
 NSString * const MGMTMPPath = @"/tmp";
 
-NSString * const MGMChannelsURL = @"http://omahaproxy.appspot.com/all.json?os=mac";
+NSString * const MGMChannelsURL = @"https://omahaproxy.appspot.com/all.json?os=mac";
 static NSString *MGMSnapshotURL = @"https://commondatastorage.googleapis.com/chromium-browser-snapshots/";
 NSString * const MGMSnapshotPrefix = @"Mac/";
 NSString * const MGMSVNLogsURL = @"http://build.chromium.org/f/chromium/perf/dashboard/ui/changelog.html?url=/trunk/src&range=%@:%@&mode=html&os=mac";
 
 NSString * const MGMCChannel = @"channel";
-NSString * const MGMCRevision = @"base_trunk_revision";
+NSString * const MGMCRevision = @"branch_base_position";
 NSString * const MGMCStable = @"stable";
 NSString * const MGMCBeta = @"beta";
 NSString * const MGMCDev = @"dev";
