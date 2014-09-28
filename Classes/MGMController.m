@@ -382,12 +382,12 @@ NSString * const MGMUBCancel = @"Cancel";
 }
 - (void)revisionDidFinish:(MGMURLBasicHandler *)theHandler {
 	NSDictionary *revisionInfo = [[theHandler data] parseJSON];
-	NSString *webkit = [[revisionInfo objectForKey:@"webkit_revision"] stringValue];
+	NSString *webkit = [NSString stringWithFormat:@"%@", [revisionInfo objectForKey:@"webkit_revision"]];
 	if (webkit!=nil)
 		[webKitBuildField setStringValue:webkit];
 	else
 		[webKitBuildField setStringValue:@"0"];
-	NSString *v8 = [[revisionInfo objectForKey:@"v8_revision"] stringValue];
+	NSString *v8 = [NSString stringWithFormat:@"%@", [revisionInfo objectForKey:@"v8_revision"]];
 	if (v8!=nil)
 		[v8BuildField setStringValue:v8];
 	else
