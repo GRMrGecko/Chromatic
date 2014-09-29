@@ -157,7 +157,7 @@ NSString * const MGMUBCancel = @"Cancel";
 	handler = [MGMURLBasicHandler handlerWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:url]] delegate:self];
 	[handler setFailWithError:@selector(revisions:didFailWithError:)];
 	[handler setFinish:@selector(revisionsFinished:)];
-	[statusField setStringValue:@"Loading Revisions"];
+	[statusField setStringValue:@"Loading revisions..."];
 	[connectionManager addHandler:handler];
 }
 
@@ -209,7 +209,7 @@ NSString * const MGMUBCancel = @"Cancel";
 	
 	[progress setIndeterminate:NO];
 	[progress startAnimation:self];
-	[progress setDoubleValue:0.25];
+	[progress setDoubleValue:0.1];
 }
 - (void)revisions:(MGMURLBasicHandler *)theHandler didFailWithError:(NSError *)theError {
 	NSLog(@"%@", theError);
@@ -235,8 +235,9 @@ NSString * const MGMUBCancel = @"Cancel";
 - (void)revisionsFinished:(MGMURLBasicHandler *)theHandler {
 	NSError *error = nil;
 	NSXMLDocument *xml = [[NSXMLDocument alloc] initWithData:[theHandler data] options:NSXMLDocumentTidyXML error:&error];
-	[progress setDoubleValue:0.50];
-	
+	if ([progress doubleValue] < 0.9) {
+		[progress incrementBy:0.02];
+	}
 	if (error!=nil) {
 		NSLog(@"%@", error);
 		NSAlert *alert = [[NSAlert new] autorelease];
@@ -331,7 +332,7 @@ NSString * const MGMUBCancel = @"Cancel";
 	}
 	[buildPopUp selectItemAtIndex:itemIndex];
 	if (startingUp)
-		[progress setDoubleValue:0.75];
+		[progress setDoubleValue:0.9];
 	[self buildSelect:self];
 }
 - (IBAction)buildSelect:(id)sender {
@@ -561,7 +562,7 @@ NSString * const MGMUBCancel = @"Cancel";
 	[updateButton setEnabled:NO];
 	[progress setIndeterminate:YES];
 	[progress startAnimation:self];
-	[statusField setStringValue:@"Uncompressing and installing update."];
+	[statusField setStringValue:@"Uncompressing and installing update..."];
 	
 	unzipTask = [NSTask new];
 	[unzipTask setLaunchPath:@"/usr/bin/ditto"];
