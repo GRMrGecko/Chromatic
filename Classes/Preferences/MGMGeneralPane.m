@@ -32,6 +32,7 @@
 			[doneSoundButton setState:([preferences boolForKey:MGMDoneSound] ? NSOnState : NSOffState)];
 			[launchWhenDoneButton setState:([preferences boolForKey:MGMLaunchWhenDone] ? NSOnState : NSOffState)];
 			[quitAfterLaunchButton setState:([preferences boolForKey:MGMQuitAfterLaunch] ? NSOnState : NSOffState)];
+			[experimentalButton setState:([preferences boolForKey:MGM64bit] ? NSOnState : NSOffState)];
         }
     }
     return self;
@@ -56,5 +57,6 @@
 	[preferences setBool:([doneSoundButton state]==NSOnState) forKey:MGMDoneSound];
 	[preferences setBool:([launchWhenDoneButton state]==NSOnState) forKey:MGMLaunchWhenDone];
 	[preferences setBool:([quitAfterLaunchButton state]==NSOnState) forKey:MGMQuitAfterLaunch];
+	[preferences setBool:([experimentalButton state]==NSOnState) forKey:MGM64bit];
 }
 @end

@@ -31,6 +31,8 @@
         } else {
 			if ([preferences stringForKey:MGMCustomSnapshotURL]!=nil)
 				[snapshotField setStringValue:[preferences stringForKey:MGMCustomSnapshotURL]];
+			if ([preferences stringForKey:MGMCustomSnapshotPrefix]!=nil)
+				[prefixField setStringValue:[preferences stringForKey:MGMCustomSnapshotPrefix]];
 			[trashButton setState:([preferences boolForKey:MGMMoveToTrash] ? NSOnState : NSOffState)];
         }
     }
@@ -55,6 +57,7 @@
 
 - (IBAction)save:(id)sender {
 	[preferences setObject:[snapshotField stringValue] forKey:MGMCustomSnapshotURL];
+	[preferences setObject:[prefixField stringValue] forKey:MGMCustomSnapshotPrefix];
 	[preferences setBool:([trashButton state]==NSOnState) forKey:MGMMoveToTrash];
 }
 @end

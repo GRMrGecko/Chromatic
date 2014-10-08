@@ -26,6 +26,7 @@
 	IBOutlet NSButton *doneSoundButton;
 	IBOutlet NSButton *launchWhenDoneButton;
 	IBOutlet NSButton *quitAfterLaunchButton;
+	IBOutlet NSButton *experimentalButton;
 }
 - (id)initWithPreferences:(MGMPreferences *)thePreferences;
 + (void)setUpToolbarItem:(NSToolbarItem *)theItem;

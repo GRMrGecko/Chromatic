@@ -407,6 +407,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				"MACOSX_DEPLOYMENT_TARGET[arch=x86_64]" = 10.5;
 				PRODUCT_NAME = Chromatic;
+				SDKROOT = macosx10.6;
 				VALID_ARCHS = "i386 x86_64";
 			};
 			name = Debug;
@@ -430,6 +431,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				"MACOSX_DEPLOYMENT_TARGET[arch=x86_64]" = 10.5;
 				PRODUCT_NAME = Chromatic;
+				SDKROOT = macosx10.6;
 				VALID_ARCHS = "i386 x86_64";
 			};
 			name = Release;

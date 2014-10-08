@@ -24,6 +24,7 @@
 	IBOutlet NSView *mainView;
 	
 	IBOutlet NSTextField *snapshotField;
+	IBOutlet NSTextField *prefixField;
 	IBOutlet NSButton *trashButton;
 }
 - (id)initWithPreferences:(MGMPreferences *)thePreferences;

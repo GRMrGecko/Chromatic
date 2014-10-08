@@ -30,10 +30,12 @@ NSString * const MGMLaunchCount = @"MGMLaunchCount";
 NSString * const MGMChannel = @"MGMChannel";
 NSString * const MGMChromiumPath = @"MGMChromiumPath";
 NSString * const MGMCustomSnapshotURL = @"MGMCustomSnapshotURL";
+NSString * const MGMCustomSnapshotPrefix = @"MGMCustomSnapshotPrefix";
 NSString * const MGMMoveToTrash = @"MGMMoveToTrash";
 NSString * const MGMDoneSound = @"MGMDoneSound";
 NSString * const MGMLaunchWhenDone = @"MGMLaunchWhenDone";
 NSString * const MGMQuitAfterLaunch = @"MGMQuitAfterLaunch";
+NSString * const MGM64bit = @"MGM64bit";
 
 NSString * const MGMCPApplications = @"/Applications";
 NSString * const MGMCPUserApplications = @"~/Applications";
@@ -42,8 +44,8 @@ NSString * const MGMChromiumZip = @"chrome-mac.zip";
 NSString * const MGMTMPPath = @"/tmp";
 
 NSString * const MGMChannelsURL = @"https://omahaproxy.appspot.com/all.json?os=mac";
-static NSString *MGMSnapshotURL = @"https://commondatastorage.googleapis.com/chromium-browser-snapshots/";
-NSString * const MGMSnapshotPrefix = @"Mac/";
+static NSString *MGMSnapshotURL = @"https://storage.googleapis.com/chromium-browser-continuous/";//https://commondatastorage.googleapis.com/chromium-browser-snapshots/
+static NSString * MGMSnapshotPrefix = @"Mac/";
 NSString * const MGMSVNLogsURL = @"http://build.chromium.org/f/chromium/perf/dashboard/ui/changelog.html?url=/trunk/src&range=%@:%@&mode=html&os=mac";
 
 NSString * const MGMCChannel = @"channel";
@@ -114,9 +116,19 @@ NSString * const MGMUBCancel = @"Cancel";
 		}
 	}
 	
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:MGM64bit]) {
+        MGMSnapshotURL = @"https://storage.googleapis.com/chromium-qa/";
+        MGMSnapshotPrefix = @"Chromium_Mac_10_8_x64__experimental_/";
+    }
+    
 	if ([defaults objectForKey:MGMCustomSnapshotURL]!=nil && ![[defaults objectForKey:MGMCustomSnapshotURL] isEqual:@""])
 		MGMSnapshotURL = [defaults objectForKey:MGMCustomSnapshotURL];
 	
+	if ([defaults objectForKey:MGMCustomSnapshotPrefix]!=nil && ![[defaults objectForKey:MGMCustomSnapshotPrefix] isEqual:@""])
+		MGMSnapshotPrefix = [defaults objectForKey:MGMCustomSnapshotPrefix];
+	
+    
+    
 	about = [MGMAbout new];
 	preferences = [MGMPreferences new];
 	[preferences addPreferencesPaneClassName:@"MGMGeneralPane"];
@@ -169,6 +181,7 @@ NSString * const MGMUBCancel = @"Cancel";
 	[defaults setObject:[NSNumber numberWithBool:YES] forKey:MGMDoneSound];
 	[defaults setObject:[NSNumber numberWithBool:NO] forKey:MGMLaunchWhenDone];
 	[defaults setObject:[NSNumber numberWithBool:NO] forKey:MGMQuitAfterLaunch];
+	[defaults setObject:[NSNumber numberWithBool:NO] forKey:MGM64bit];
 	
 	[[NSUserDefaults standardUserDefaults] registerDefaults:defaults];
 }
@@ -383,12 +396,12 @@ NSString * const MGMUBCancel = @"Cancel";
 }
 - (void)revisionDidFinish:(MGMURLBasicHandler *)theHandler {
 	NSDictionary *revisionInfo = [[theHandler data] parseJSON];
-	NSString *webkit = [NSString stringWithFormat:@"%@", [revisionInfo objectForKey:@"webkit_revision"]];
+	NSString *webkit = [[revisionInfo objectForKey:@"webkit_revision"] description];
 	if (webkit!=nil)
 		[webKitBuildField setStringValue:webkit];
 	else
 		[webKitBuildField setStringValue:@"0"];
-	NSString *v8 = [NSString stringWithFormat:@"%@", [revisionInfo objectForKey:@"v8_revision"]];
+	NSString *v8 = [[revisionInfo objectForKey:@"v8_revision"] description];
 	if (v8!=nil)
 		[v8BuildField setStringValue:v8];
 	else

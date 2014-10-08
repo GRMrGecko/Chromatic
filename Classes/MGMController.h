@@ -22,10 +22,12 @@
 @class MGMAbout, MGMPreferences, MGMURLConnectionManager, MGMURLBasicHandler, WebView;
 
 extern NSString * const MGMCustomSnapshotURL;
+extern NSString * const MGMCustomSnapshotPrefix;
 extern NSString * const MGMMoveToTrash;
 extern NSString * const MGMDoneSound;
 extern NSString * const MGMLaunchWhenDone;
 extern NSString * const MGMQuitAfterLaunch;
+extern NSString * const MGM64bit;
 
 @interface MGMController : NSObject
 #if (MAC_OS_X_VERSION_MAX_ALLOWED >= 1060)
