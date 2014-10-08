@@ -41,13 +41,13 @@ NSString * const MGMCPChromium = @"Chromium.app";
 NSString * const MGMChromiumZip = @"chrome-mac.zip";
 NSString * const MGMTMPPath = @"/tmp";
 
-NSString * const MGMChannelsURL = @"http://omahaproxy.appspot.com/all.json?os=mac";
+NSString * const MGMChannelsURL = @"https://omahaproxy.appspot.com/all.json?os=mac";
 static NSString *MGMSnapshotURL = @"https://commondatastorage.googleapis.com/chromium-browser-snapshots/";
 NSString * const MGMSnapshotPrefix = @"Mac/";
 NSString * const MGMSVNLogsURL = @"http://build.chromium.org/f/chromium/perf/dashboard/ui/changelog.html?url=/trunk/src&range=%@:%@&mode=html&os=mac";
 
 NSString * const MGMCChannel = @"channel";
-NSString * const MGMCRevision = @"base_trunk_revision";
+NSString * const MGMCRevision = @"branch_base_position";
 NSString * const MGMCStable = @"stable";
 NSString * const MGMCBeta = @"beta";
 NSString * const MGMCDev = @"dev";
@@ -157,7 +157,7 @@ NSString * const MGMUBCancel = @"Cancel";
 	handler = [MGMURLBasicHandler handlerWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:url]] delegate:self];
 	[handler setFailWithError:@selector(revisions:didFailWithError:)];
 	[handler setFinish:@selector(revisionsFinished:)];
-	[statusField setStringValue:@"Loading Revisions"];
+	[statusField setStringValue:@"Loading revisions..."];
 	[connectionManager addHandler:handler];
 }
 
@@ -209,7 +209,7 @@ NSString * const MGMUBCancel = @"Cancel";
 	
 	[progress setIndeterminate:NO];
 	[progress startAnimation:self];
-	[progress setDoubleValue:0.25];
+	[progress setDoubleValue:0.1];
 }
 - (void)revisions:(MGMURLBasicHandler *)theHandler didFailWithError:(NSError *)theError {
 	NSLog(@"%@", theError);
@@ -235,8 +235,9 @@ NSString * const MGMUBCancel = @"Cancel";
 - (void)revisionsFinished:(MGMURLBasicHandler *)theHandler {
 	NSError *error = nil;
 	NSXMLDocument *xml = [[NSXMLDocument alloc] initWithData:[theHandler data] options:NSXMLDocumentTidyXML error:&error];
-	[progress setDoubleValue:0.50];
-	
+	if ([progress doubleValue] < 0.9) {
+		[progress incrementBy:0.02];
+	}
 	if (error!=nil) {
 		NSLog(@"%@", error);
 		NSAlert *alert = [[NSAlert new] autorelease];
@@ -331,7 +332,7 @@ NSString * const MGMUBCancel = @"Cancel";
 	}
 	[buildPopUp selectItemAtIndex:itemIndex];
 	if (startingUp)
-		[progress setDoubleValue:0.75];
+		[progress setDoubleValue:0.9];
 	[self buildSelect:self];
 }
 - (IBAction)buildSelect:(id)sender {
@@ -382,12 +383,12 @@ NSString * const MGMUBCancel = @"Cancel";
 }
 - (void)revisionDidFinish:(MGMURLBasicHandler *)theHandler {
 	NSDictionary *revisionInfo = [[theHandler data] parseJSON];
-	NSString *webkit = [[revisionInfo objectForKey:@"webkit_revision"] stringValue];
+	NSString *webkit = [NSString stringWithFormat:@"%@", [revisionInfo objectForKey:@"webkit_revision"]];
 	if (webkit!=nil)
 		[webKitBuildField setStringValue:webkit];
 	else
 		[webKitBuildField setStringValue:@"0"];
-	NSString *v8 = [[revisionInfo objectForKey:@"v8_revision"] stringValue];
+	NSString *v8 = [NSString stringWithFormat:@"%@", [revisionInfo objectForKey:@"v8_revision"]];
 	if (v8!=nil)
 		[v8BuildField setStringValue:v8];
 	else
@@ -561,7 +562,7 @@ NSString * const MGMUBCancel = @"Cancel";
 	[updateButton setEnabled:NO];
 	[progress setIndeterminate:YES];
 	[progress startAnimation:self];
-	[statusField setStringValue:@"Uncompressing and installing update."];
+	[statusField setStringValue:@"Uncompressing and installing update..."];
 	
 	unzipTask = [NSTask new];
 	[unzipTask setLaunchPath:@"/usr/bin/ditto"];
